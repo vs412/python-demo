@@ -1,0 +1,10 @@
+.venv
+.ruff_cache
+.idea
+.pytest_cache
+.env*
+!.env*example
+__pycache__
+test-results.xml
+.coverage
+coverage.xml
