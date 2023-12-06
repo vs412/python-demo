@@ -9,7 +9,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(case_sensitive=False)
 
     db_connection_string: str = Field(alias="DB_CONNECTION_STRING")
-    environment: str = Field(alias="ENVIRONMENT", default="Production")
+    environment: str = Field(
+        alias="ENVIRONMENT",
+        default="postgresql+asyncpg://postgres:8962726@localhost/interview",
+    )
 
     def is_development(self) -> bool:
         return self.environment.lower() == "development"
