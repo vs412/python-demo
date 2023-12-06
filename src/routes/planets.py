@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from .. import entities, models
 from ..database import get_db
@@ -15,15 +16,30 @@ router = APIRouter(prefix="/planets", tags=["Planets"])
 
 
 @router.get("", response_model=list[models.Planet])
-async def get_planets(db: AsyncSession = Depends(get_db)):
-    return (await db.execute(select(entities.Planet))).scalars().all()
+async def get_planets(
+    db: AsyncSession = Depends(get_db),
+):
+    stmt = select(entities.Planet).options(
+        joinedload(entities.Planet.system, innerjoin=True)
+    )
+    return (await db.execute(stmt)).scalars().all()
 
 
 @router.get("/{planet_id}", response_model=models.Planet)
-async def get_planet(planet_id: UUID, db: AsyncSession = Depends(get_db)):
-    planet = await db.get(entities.Planet, planet_id)
+async def get_planet(
+    planet_id: UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    stmt = (
+        select(entities.Planet)
+        .options(joinedload(entities.Planet.system, innerjoin=True))
+        .filter(entities.Planet.id == planet_id)
+        .limit(1)
+    )
+    planet = (await db.execute(stmt)).scalar_one_or_none()
     if planet is None:
-        raise HTTPException(status_code=404, detail="Planet not found")
+        raise HTTPException(status_code=404, detail="Station not found")
+
     return planet
 
 
